@@ -10,20 +10,22 @@ local default_opts = {
   full_history = false,
 }
 
---- @class TmuxSource : blink.cmp.Source, blink-cmp-tmux.Opts
+--- @class blink.cmp.Source : blink-cmp-tmux.Opts
 local M = {}
 
 --- @param opts blink-cmp-tmux.Opts
 function M.new(opts)
-  --- @type blink-cmp-tmux.Opts
-  local config = vim.tbl_deep_extend("force", default_opts, opts or {})
+  opts = vim.tbl_deep_extend("force", default_opts, opts or {})
 
-  vim.validate({
-    panes = { config.panes, "string" },
-    full_history = { config.full_history, "boolean" },
-  })
+  vim.validate("panes", opts.panes, function(val)
+    return vim.list_contains({ "window", "session", "server" }, val)
+  end, "'window'|'session'|'server'")
+  vim.validate("full_history", opts.full_history, "boolean")
 
-  return setmetatable(config, { __index = M })
+  local self = setmetatable({}, { __index = M })
+  self.panes = opts.panes
+  self.full_history = opts.full_history
+  return self
 end
 
 function M:enabled()
